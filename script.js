@@ -1,9 +1,8 @@
- 
 // almacenar los datos (libros)
 const Books = [
-  CreateBook("Aliento de dragon", "Malena Salazar", "Fantasia", genetateISBN()),
-  CreateBook("Satanas", "Mario Mendoza", "Novela", genetateISBN()),
-  CreateBook("Historias Extraoridinarias", "Edgar Allan Poe", "Terror", genetateISBN()),
+  CreateBook("Aliento de dragon", "Malena Salazar", "Fantasia", GenerateISBN()),
+  CreateBook("Satanas", "Mario Mendoza", "Novela", GenerateISBN()),
+  CreateBook("Historias Extraordinarias", "Edgar Allan Poe", "Terror", GenerateISBN()),
 ];
 
 // almacena los libros prestados
@@ -12,19 +11,19 @@ const BorrowedBooks = new Map();
 // crear el isbn aleatoriamente
 
 function GenerateISBN(){
-  return `${Math.floor(Math.random()*100)+900}-${Math.floor(Math.random()*10)+90}-${Math.floor(Math.random()*1000)+9000}-${Math.floor(Math.random()*120)+480}-${Math.floor(Math.random()*10)}-`
+  return `${Math.floor(Math.random()*100)+900}-${Math.floor(Math.random()*10)+90}-${Math.floor(Math.random()*1000)+9000}-${Math.floor(Math.random()*120)+480}-${Math.floor(Math.random()*10)}`
 }
 
 // funcion para crear un libro 
 
-function CreateBook(Title, Author, Genere, ISBN){
+function CreateBook(Title, Author, Genre, ISBN){
   return {
-    ID : Date.now() + math.floor(math.random()*1000), // importamos algunas funciones de math para evitar duplicados
+    ID : Date.now() + Math.floor(Math.random()*1000),
     Title,
     Author,
-    Genere,
+    Genre,
     ISBN,
-    Is_Aviable : true,
+    IsAvailable : true,
     BorrowedBy : null,
     BorrowedAt : null,
     DueDate : null,
@@ -34,8 +33,8 @@ function CreateBook(Title, Author, Genere, ISBN){
 
 // agregar un libro a la biblioteca
 
-function AddBookToLibrary(){
-  const Book =  CreateBook(Title, Author, Genere, ISBN)
+function AddBookToLibrary(BooksArray, Title, Author, Genre, ISBN){
+  const Book =  CreateBook(Title, Author, Genre, ISBN)
   BooksArray.push(Book)
   return Book
 };
@@ -43,10 +42,10 @@ function AddBookToLibrary(){
 // Eliminar un libro de la biblioteca
 
 function RemoveBookFromLibrary(BooksArray, ID){
-  const Index =  BooksArray.findIndex(Books => Books.ID ===ID)
+  const Index =  BooksArray.findIndex(Book => Book.ID ===ID)
   if (Index != -1){
-    return BooksArray.splice(index , 1)[0]
-  };
+    return BooksArray.splice(Index, 1)[0];
+  }
   
   return null
 };
@@ -54,43 +53,45 @@ function RemoveBookFromLibrary(BooksArray, ID){
 // prestar un libro
 
 function BorrowBook(BooksArray, BorrowedBooks, BookID, User, Days = 30){
+  const Book = BooksArray.find(Book => Book.ID === BookID)
   if (!Book){
     return{Success : false, Message: "libro no encontrado", Book : null}
   };
-  if (!Book.Is_Aviable){
+  if (!Book.IsAvailable){
     return {Success: false, Message : "este libro ya ha sido prestado", Book}
   }
+
+  Book.IsAvailable = false
+  Book.BorrowedBy = User
+  Book.BorrowedAt = new Date()
+  Book.DueDate = new Date(Date.now()+ Days * 24 * 60 * 60 * 1000)
+  BorrowedBooks.set(BookID, Book)
+
+  return {
+    Success : true,
+    Message : `El libro ha sido prestado a ${User}`,
+    Book,
+    DueDate : Book.DueDate
+  };
 }
-
-Book.Is_Aviable = false
-Book.BorrowedBy = User
-Book.BorrowedAt = new Date()
-Book.DueDate = new Date(Date.now()+ Days * 24 * 60 * 60 * 1000)
-BorrowedBooks.set(BookID, Book)
-
-return {
-  Success : true,
-  Message : `El libro ha sido prestado a ${User}`,
-  Book,
-  DueDate : Book.DueDate
-};
 
 // devolver libro
 
-function ReturnBook(BooksArray, BorrowedBooks, BookID, DebtDebt = 0.5){
+function ReturnBook(BorrowedBooks, BookID, DebtDate = 0.5){
   const Book = BorrowedBooks.get(BookID)
   if(!Book){
     return {Success : false, Message : "este libro no pertenece a la biblioteca" , Debt : 0}
+  }
   const Debt = CalculateDebt(Book.DueDate, DebtRate);
-  Book.Is_Available = true;
+  Book.IsAvailable = true;
   Book.BorrowedBy = null;
   Book.BorrowedAt = null;
   Book.DueDate = null;
   BorrowedBooks.delete(BookID);
 
   return {
-    success: true,
-    message: "Libro devuelto",
+    Success: true,
+    Message: "Libro devuelto",
     Debt: Debt
   };
 }
@@ -155,7 +156,7 @@ function GenerateLibraryReport(BooksArray, BorrowedBooks) {
 
 console.log("Biblioteca cargada con 3 libros:");
 console.table(Books);
-}
+
 
 
 
